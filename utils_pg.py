@@ -1,0 +1,39 @@
+#pylint: skip-file
+import numpy as np
+import theano
+import theano.tensor as T
+import cPickle as pickle
+
+def floatX(X):
+    return X.astype(dtype=theano.config.floatX)
+
+def init_weights(shape, name):
+    return theano.shared(floatX(np.random.randn(*shape) * 0.1), name)
+
+def init_gradws(shape, name):
+    return theano.shared(floatX(np.zeros(shape)), name)
+
+def init_bias(size, name):
+    return theano.shared(floatX(np.zeros((1, size))), name, broadcastable=(True, False))
+
+def rmse(py, y):
+    e = 0
+    for t in xrange(len(y)):
+        e += np.sqrt(np.mean((np.asarray(py[t,]) - np.asarray(y[t,])) ** 2))
+    return e / len(y)
+
+def save_model(f, model):
+	ps = {}
+	for p in model.params:
+		ps[p.name] = p.get_value()
+        #print p.name
+        #print p.get_value()
+	pickle.dump(ps, open(f, "wb"))
+
+def load_model(f, model):
+    ps = pickle.load(open(f, "rb"))
+    for p in model.params:
+        p.set_value(ps[p.name])
+        #print p.name
+        #print ps[p.name]
+    return model

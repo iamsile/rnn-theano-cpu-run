@@ -6,7 +6,7 @@ from utils_pg import *
 from nn import * 
 
 class Softmax(object):
-    def __init__(self, shape):
+    def __init__(self, shape, X):
         prefix = "Softmax_"
         self.in_size, self.out_size = shape
         self.W = init_weights(shape, prefix + "W")
@@ -15,10 +15,11 @@ class Softmax(object):
         self.gW = init_gradws(shape, prefix + "gW")
         self.gb = init_bias(self.out_size, prefix + "gb")
 
-        D, X = T.matrices("D", "X")
+        D = T.matrices("D")
+        self.X = X
         def _active(X):
             return T.nnet.softmax(T.dot(X, self.W) + self.b)
-        self.active = theano.function(inputs = [X], outputs = _active(X))
+        self.active = theano.function(inputs = [self.X], outputs = _active(self.X))
 
         def _propagate(D):
             return T.dot(D, self.W.T)
@@ -53,8 +54,8 @@ class Softmax(object):
         self.params = [self.W, self.b]
 
 class SoftmaxLayer(object):
-    def __init__(self, shape):
-        self.cell = Softmax(shape)
+    def __init__(self, shape, X):
+        self.cell = Softmax(shape, X)
         self.activation = []
         self.delta = []
         self.propagation = []

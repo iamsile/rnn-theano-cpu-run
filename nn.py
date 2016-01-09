@@ -24,27 +24,31 @@ class NN(object):
         self.hidden_size = hidden_size
         self.cell = cell
         self.p = p
+        self.is_train = T.iscalar('is_train')
         self.batch_size = T.iscalar('batch_size')
         self.define_layers()
 
     def define_layers(self):
         self.layers = []
         self.params = []
+        X = T.matrix("X")
         rng = np.random.RandomState(1234)
 
         for layer in xrange(len(self.hidden_size)):
             if layer == 0:
+                layer_input = X
                 shape = (self.in_size, self.hidden_size[layer])
             else:
+                layer_input = self.layers[layer - 1].cell.activation
                 shape = (self.hidden_size[layer - 1], self.hidden_size[layer])
             if self.cell == "gru":
-                hidden_layer = GRULayer(rng, str(layer), shape, self.p)
+                hidden_layer = GRULayer(rng, str(layer), shape, layer_input, self.is_train, self.batch_size, self.p)
             elif self.cell == "lstm":
-                hidden_layer = LSTMLayer(rng, str(layer), shape, self.p)
+                hidden_layer = LSTMLayer(rng, str(layer), shape, layer_input, self.is_train, self.batch_size, self.p)
             self.layers.append(hidden_layer)
             self.params += hidden_layer.cell.params
 
-        output_layer = SoftmaxLayer((self.hidden_size[len(self.hidden_size) - 1], self.out_size))
+        output_layer = SoftmaxLayer((self.hidden_size[len(self.hidden_size) - 1], self.out_size), hidden_layer.cell.activation)
         self.layers.append(output_layer)
         self.params += output_layer.cell.params
 

@@ -6,7 +6,7 @@ from utils_pg import *
 from nn import *
 
 class GRU(object):
-    def __init__(self, rng, layer, shape, p):
+    def __init__(self, rng, layer, shape, X, is_train = 1, batch_size = 1, p = 0.5):
         prefix = "GRU_"
         self.in_size, self.out_size = shape
         #print "W_xr type: ", type(layer)
@@ -43,24 +43,24 @@ class GRU(object):
             gh = T.tanh(T.dot(x, self.W_xh) + T.dot(r * pre_h, self.W_hh) + self.b_h)
             h = z * pre_h + (1 - z) * gh
             return r, z, gh, h 
-        X = T.matrix("X")
+        self.X = X
         H = T.matrix("H")
-        [r, z, gh, h], updates = theano.scan(_active, sequences=[X], outputs_info=[None, None, None, H])
+        [r, z, gh, h], updates = theano.scan(_active, sequences=[self.X], outputs_info=[None, None, None, H])
         self.active = theano.function(
-            inputs = [X, H],
+            inputs = [self.X, H],
             outputs = [r, z, gh, h]
         )
 
-        h = T.reshape(h, (X.shape[0], self.out_size))
+        h = T.reshape(h, (self.X.shape[0], self.out_size))
         # dropout
         if p > 0:
             srng = T.shared_randomstreams.RandomStreams(rng.randint(999999))
             mask = srng.binomial(n = 1, p = 1-p, size = h.shape, dtype = theano.config.floatX)
             # self.activation = T.switch(T.eq(is_train, 1), h * mask, h * (1 - p))
-            self.activation = T.switch(T.eq(1, 1), h * mask, h * (1 - p)) # is_train = 1
+            self.activation = T.switch(T.eq(is_train, 1), h * mask, h * (1 - p)) # is_train = 1
         else:
             # self.activation = T.switch(T.eq(is_train, 1), h * mask, h * (1 - p))
-            self.activation = T.switch(T.eq(1, 1), h, h) # is_train
+            self.activation = T.switch(T.eq(is_train, 1), h, h) # is_train
 
         # TODO ->scan
         def _derive(prop, r, post_r, z, gh, pre_h, post_dh, post_dgh, post_dr, post_dz):
@@ -136,9 +136,9 @@ class GRU(object):
 
 
 class GRULayer(object):
-    def __init__(self, rng, layer, shape, p):
+    def __init__(self, rng, layer, shape, X, is_train, batch_size, p):
         self.h_size = shape[1]
-        self.cell = GRU(rng, layer, shape, p)
+        self.cell = GRU(rng, layer, shape, X, is_train, batch_size, p)
 
         self.activation = []
         self.propagation = []

@@ -43,8 +43,8 @@ start = time.time()
    
 #     print "Iter = " + str(i) + ", Error = " + str(error / len(seqs)) + ", Time = " + str(in_time)
 # print time.time() - start
-
-for batch_id, xy in data_xy.items():
+for i in xrange(100):
+    for batch_id, xy in data_xy.items():
         # print xy[0]
         X, Y, zero_m, seqs_len = data.index2seqs(seqs, xy[0], w2i)
         #print len(X), len(Y)

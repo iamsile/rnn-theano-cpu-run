@@ -15,7 +15,7 @@ def init_bias(size, name):
     return theano.shared(floatX(np.zeros((size, 1))), name) 
 
 class LSTMLayer(object):
-    def __init__(self, layer, rng, shape, p):
+    def __init__(self, layer, rng, shape, X, is_train, p):
         prefix = "LSTM_"
         self.in_size, self.out_size = shape
         
@@ -38,7 +38,7 @@ class LSTMLayer(object):
         self.W_co = init_weights((self.out_size, self.out_size), prefix + "W_co" + "_" + layer)
         self.b_o = init_bias(self.out_size, prefix + "b_o" + "_" + layer)
 
-        # self.X = X
+        self.X = X
         
         def _active(x, pre_h, pre_c):
             i = T.nnet.sigmoid(T.dot(x, self.W_xi) + T.dot(pre_h, self.W_hi) + T.dot(pre_c, self.W_ci) + self.b_i)
@@ -59,10 +59,10 @@ class LSTMLayer(object):
             srng = T.shared_randomstreams.RandomStreams(rng.randint(999999))
             mask = srng.binomial(n = 1, p = 1-p, size = h.shape, dtype = theano.config.floatX)
             # self.activation = T.switch(T.eq(is_train, 1), h * mask, h * (1 - p))
-            self.activation = T.switch(T.eq(1, 1), h * mask, h * (1 - p))
+            self.activation = T.switch(T.eq(is_train, 1), h * mask, h * (1 - p))
         else:
             # self.activation = T.switch(T.eq(is_train, 1), h, h)
-            self.activation = T.switch(T.eq(1, 1), h, h)
+            self.activation = T.switch(T.eq(is_train, 1), h, h)
         
         self.params = [self.W_xi, self.W_hi, self.W_ci, self.b_i,
                        self.W_xf, self.W_hf, self.W_cf, self.b_f,

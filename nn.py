@@ -18,14 +18,15 @@ class Layer(object):
         pass
  
 class NN(object):
-    def __init__(self, in_size, out_size, hidden_size, cell, p = 0.5):
+    def __init__(self, in_size, out_size, hidden_size, cell, batch_size, p = 0.5):
         self.in_size = in_size
         self.out_size = out_size
         self.hidden_size = hidden_size
         self.cell = cell
         self.p = p
         self.is_train = T.iscalar('is_train')
-        self.batch_size = T.iscalar('batch_size')
+        # self.batch_size = T.iscalar('batch_size')
+        self.batch_size = batch_size
         self.define_layers()
 
     def define_layers(self):
@@ -48,7 +49,7 @@ class NN(object):
             self.layers.append(hidden_layer)
             self.params += hidden_layer.cell.params
 
-        output_layer = SoftmaxLayer((self.hidden_size[len(self.hidden_size) - 1], self.out_size), hidden_layer.cell.activation)
+        output_layer = SoftmaxLayer((self.hidden_size[len(self.hidden_size) - 1], self.out_size), hidden_layer.cell.activation, self.batch_size)
         self.layers.append(output_layer)
         self.params += output_layer.cell.params
 

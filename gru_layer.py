@@ -44,7 +44,7 @@ class GRU(object):
             h = z * pre_h + (1 - z) * gh
             return r, z, gh, h 
         self.X = X
-        H = T.matrix("H")
+        H = np.zeros((1, shape[1]), dtype=theano.config.floatX)
         [r, z, gh, h], updates = theano.scan(_active, sequences=[self.X], outputs_info=[None, None, None, H])
         self.active = theano.function(
             inputs = [self.X, H],

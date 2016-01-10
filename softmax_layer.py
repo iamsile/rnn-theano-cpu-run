@@ -18,7 +18,11 @@ class Softmax(object):
         D = T.matrices("D")
         self.X = X
         def _active(X):
-            return T.nnet.softmax(T.dot(X, self.W) + self.b)
+            x = T.reshape(X, (batch_size, self.in_size))
+            o = T.nnet.softmax(T.dot(X, self.W) + self.b)
+            o = T.reshape(o, (1, batch_size * self.out_size))
+            return o
+            # return T.nnet.softmax(T.dot(X, self.W) + self.b)
         self.active = theano.function(inputs = [self.X], outputs = _active(self.X))
 
         def _propagate(D):
@@ -54,8 +58,8 @@ class Softmax(object):
         self.params = [self.W, self.b]
 
 class SoftmaxLayer(object):
-    def __init__(self, shape, X):
-        self.cell = Softmax(shape, X)
+    def __init__(self, shape, X, batch_size):
+        self.cell = Softmax(shape, X, batch_size)
         self.activation = []
         self.delta = []
         self.propagation = []

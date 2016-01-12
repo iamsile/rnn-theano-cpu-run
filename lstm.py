@@ -3,7 +3,7 @@ import numpy as np
 import theano
 import theano.tensor as T
 from data import char_sequence
-from utils_pg import *
+from utils import *
 
 def floatX(X):
     return np.asarray(X, dtype=theano.config.floatX)
@@ -52,16 +52,13 @@ class LSTMLayer(object):
                                       outputs_info = [T.alloc(floatX(0.), 1, self.out_size),
                                                       T.alloc(floatX(0.), 1, self.out_size)])
         
-        # self.activation = T.reshape(h, (self.X.shape[0], self.out_size))
         h = T.reshape(h, (self.X.shape[0], self.out_size))
         # dropout
         if p > 0:
             srng = T.shared_randomstreams.RandomStreams(rng.randint(999999))
             mask = srng.binomial(n = 1, p = 1-p, size = h.shape, dtype = theano.config.floatX)
-            # self.activation = T.switch(T.eq(is_train, 1), h * mask, h * (1 - p))
             self.activation = T.switch(T.eq(is_train, 1), h * mask, h * (1 - p))
         else:
-            # self.activation = T.switch(T.eq(is_train, 1), h, h)
             self.activation = T.switch(T.eq(is_train, 1), h, h)
         
         self.params = [self.W_xi, self.W_hi, self.W_ci, self.b_i,
